@@ -344,7 +344,7 @@ def flash_attention(xq, xk, xv, attn_mask:Tensor|None=None, is_causal:bool=False
   if attn_mask is not None:
     if attn_mask.dtype == dtypes.bool: attn_mask = attn_mask.where(0, -float("inf"))
   else:
-    attn_mask = Tensor.zeros((B, 1, N, N), requires_grad=False, device=single_device, dtype=dtypes.float32)
+    attn_mask = Tensor.zeros((1, 1, 1, 1), requires_grad=False, device=single_device, dtype=dtypes.float32).expand(B, 1, N, N)
   if attn_mask.shape != (B, 1, N, N):
     attn_mask = attn_mask.expand(B, 1, N, N)
   if isinstance(xq.device, tuple) and not isinstance(attn_mask.device, tuple):

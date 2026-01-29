@@ -3564,14 +3564,24 @@ class Tensor(OpMixin):
     # NOTE: it also works when `key` and `value` have symbolic shape.
     assert all_int(self.shape), f"does not support symbolic shape {self.shape}"
 
-    if getenv("FLASH_ATTENTION"):
-      from extra.thunder.tiny.fa import flash_attention
-      return flash_attention(self, key, value, attn_mask=attn_mask, is_causal=is_causal)
-
     # GQA: https://docs.pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html
     if enable_gqa:
+<<<<<<< HEAD
       key = key.repeat_interleave(int(self.shape[-3] // key.shape[-3]), dim=-3)
       value = value.repeat_interleave(int(self.shape[-3] // value.shape[-3]), dim=-3)
+=======
+      key = key.repeat_interleave(self.shape[-3] // key.shape[-3], dim=-3)
+      value = value.repeat_interleave(self.shape[-3] // value.shape[-3], dim=-3)
+      enable_gqa = False
+
+    if getenv("FLASH_ATTENTION"):
+      try:
+        from extra.thunder.tiny.fa import flash_attention
+      except ImportError:
+        flash_attention = None
+      if flash_attention is not None:
+        return flash_attention(self, key, value, attn_mask=attn_mask, is_causal=is_causal)
+>>>>>>> 9a2d5aa8d (add GGML 7, 11, 13 support and DeepSeek2 architecture for the GLM 4.7)
 
     q = self
     qk = q.matmul(key.transpose(-2,-1), dtype=least_upper_dtype(q.dtype, key.dtype, dtypes.float32)) / math.sqrt(q.shape[-1])
